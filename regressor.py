@@ -5,7 +5,10 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder, OrdinalEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from ydata_profiling import ProfileReport
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import GridSearchCV
 
 data = pd.read_csv("StudentScore.xls", delimiter=",")
 # profile = ProfileReport(data, title="Score Report", explorative=True)
@@ -58,11 +61,42 @@ preprocessor = ColumnTransformer(transformers=[
 
 reg = Pipeline(steps=[
   ("preprocessor", preprocessor),
-  ("model", LinearRegression()),
+  # ("model", LinearRegression()),
+  ("model", RandomForestRegressor()),
 ])
 
-reg.fit(x_train, y_train)
-y_predict = reg.predict(x_test)
+# reg.fit(x_train, y_train)
+# y_predict = reg.predict(x_test)
+# for i, j in zip(y_predict, y_test):
+#   print("Predicted Value {}. Actual Value {}".format(i, j))
+# print("MAE: {}".format(mean_absolute_error(y_test, y_predict)))
+# print("MSE: {}".format(mean_squared_error(y_test, y_predict)))
+# print("R2: {}".format(r2_score(y_test, y_predict)))
 
-for i, j in zip(y_predict, y_test):
-  print("Predicted Value {}. Actual Value {}".format(i, j))
+# linear regression
+# MAE: 3.2067431045633406
+# MSE: 14.984683417320479
+# R2: 0.937827269563397 
+
+# random forest
+# MAE: 3.607703452380952
+# MSE: 20.357348489923467
+# R2: 0.9155356236218488
+
+
+params = {
+  "preprocessor__num_feature__imputer__strategy": ["median", "mean"],
+  "model__n_estimators": [100, 200, 300],
+  "model__criterion": ["squared_error", "absolute_error", "friedman_mse", "poisson"],
+  "model__max_depth": [None, 2, 5],
+}
+
+grid_search = GridSearchCV(estimator=reg, param_grid=params, cv=5, scoring="r2", verbose=2, n_jobs=-1)
+grid_search.fit(x_train, y_train)
+print(grid_search.best_estimator_)
+print(grid_search.best_score_)
+print(grid_search.best_params_)
+y_predict = grid_search.predict(x_test)
+print("MAE: {}".format(mean_absolute_error(y_test, y_predict)))
+print("MSE: {}".format(mean_squared_error(y_test, y_predict)))
+print("R2: {}".format(r2_score(y_test, y_predict)))

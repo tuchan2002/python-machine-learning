@@ -47,6 +47,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_
 
 clf = LazyClassifier(verbose=0, ignore_warnings=True, custom_metric=None)
 models, predictions = clf.fit(x_train, x_test, y_train, y_test)
+print(predictions)
 
 
 
